@@ -39,3 +39,12 @@ $ chmod +x src/scripts/Home_Service_robot.sh\
 $ ./src/scripts/Home_Service_robot.sh\
 ```
 Note: To redraw the map, close all ros terminals and re-run the script test.sh instead. While all terminal is open, ```run rosrun map_server map_saver -f my_map```. Replace the ``map/SimpleMap`` files with the newly created ```my_map```.
+# Package explaination
+1- The turetlebot packages: <br />
+The turtlebot meta package provides all the basic drivers for running and using a TurtleBot. <br />
+2- the Gmapping package: <br />
+This package contains a ROS wrapper for OpenSlam's Gmapping. The gmapping package provides laser-based SLAM (Simultaneous Localization and Mapping), as a ROS node called slam_gmapping. Using slam_gmapping, you can create a 2-D occupancy grid map (like a building floorplan) from laser and pose data collected by a mobile robot.
+3-AMCL package :<br /> 
+ amcl is a probabilistic localization system for a robot moving in 2D. It implements the adaptive (or KLD-sampling) Monte Carlo localization approach (as described by Dieter Fox), which uses a particle filter to track the pose of a robot against a known map.
+
+This node is derived, with thanks, from Andrew Howard's excellent 'amcl' Player driver.
