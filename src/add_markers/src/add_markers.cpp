@@ -28,7 +28,7 @@ int main( int argc, char** argv )
   float dropy=-1.0;
   visualization_msgs::Marker cube;
   // Set the frame ID and timestamp.  See the TF tutorials for information on these.
-  cube.header.frame_id = "odom";
+  cube.header.frame_id = "map";
   cube.header.stamp = ros::Time::now();
 
   // Set the namespace and id for this marker.  This serves to create a unique ID
@@ -87,8 +87,8 @@ int main( int argc, char** argv )
         if( (xdistance < tol) && (ydistance < tol) )
         {
           cube.action = visualization_msgs::Marker::ADD;
-          cube.pose.position.x = dropx;
-          cube.pose.position.y = dropy;
+          cube.pose.position.x = dropx-pickx;
+          cube.pose.position.y = dropy-picky;
           cube.pose.orientation.z = 0;
           cube_pub.publish(cube);
         }

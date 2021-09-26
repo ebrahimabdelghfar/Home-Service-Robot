@@ -6,4 +6,4 @@ xterm -e "roslaunch turtlebot_gazebo amcl_demo.launch" &
 sleep 5
 xterm -e "roslaunch turtlebot_rviz_launchers view_navigation.launch rviz_config_file:=$(pwd)/../rvizConfig/home_service.rviz"&
 sleep 15 
-xterm -e "cd ~/Home-service-Robot;rosrun pick_objects pick_objects_test " 
+xterm -e "cd ~/Home-service-Robot;rosrun pick_objects pick_objects" 
