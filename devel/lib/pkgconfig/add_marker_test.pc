@@ -1,0 +1,8 @@
+prefix=/home/ebrahim/Home-service-Robot/devel
+
+Name: add_marker_test
+Description: Description of add_marker_test
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
