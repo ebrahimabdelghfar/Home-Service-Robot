@@ -61,3 +61,6 @@ This node is derived, with thanks, from Andrew Howard's excellent 'amcl' Player 
  the add marker package is used to add a shape like cube , cylinder ,etc in pickup point thats is specified in the code the after the robot reached pick it will disapear then apear in the dropoff zone . it use Visualziation and odometry msg , visulaization to add shapes and odometry msg to recieve and update robot position from the encoder.
  <br />
  <br />
+ 5-The pickup Package :
+ <br />
+ the package is used to drive the robot to pickup and dropoff location autonomously without any interferance and it publish the odometry to add marker
