@@ -1,126 +1,106 @@
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
 #include "nav_msgs/Odometry.h"
-#include <cmath>
+#include <tf/tf.h>
+#include <math.h>
 
-double pickUpPos[2]  = {0, 4};
-double dropOffPos[2] = {11, -7};
+double robotx = 0.0;
+double roboty = 0.0;
 
-double pose[2] = {0, 0};  // current pose
-
-void get_current_pose(const nav_msgs::Odometry::ConstPtr& msg)
+void odomCallback(const nav_msgs::Odometry::ConstPtr& msg)
 {
-  pose[0] = msg->pose.pose.position.x;
-  pose[1] = msg->pose.pose.position.y;
+  robotx = msg->pose.pose.position.x;
+  roboty = msg->pose.pose.position.y;
 }
 
-double distToCurrentPos(double goalPos[2])
-{
-  double dx = goalPos[0] - pose[0];
-  double dy = goalPos[1] - pose[1];
-  return sqrt(dx*dx + dy*dy);
-}
-
-bool reach_pick_up()
-{
-  return distToCurrentPos(pickUpPos) < 0.8;
-}
-
-bool reach_drop_zone()
-{
-  return distToCurrentPos(dropOffPos) < 0.2;
-}
 
 int main( int argc, char** argv )
 {
   ros::init(argc, argv, "add_markers");
   ros::NodeHandle n;
-  ros::Rate r(1);
-  ros::Publisher marker_pub = n.advertise<visualization_msgs::Marker>("visualization_marker", 1);
+  ros::Rate rate(20);
+  ros::Subscriber odom_sub = n.subscribe("/odom", 1000, odomCallback);
+  ros::Publisher cube_pub = n.advertise<visualization_msgs::Marker>("visualization_marker", 1);
+  bool picked = false;
+  float pickx=14.0;
+  float picky=-0.2;
+  float dropx=14.0;
+  float dropy=-1.0;
+  visualization_msgs::Marker cube;
+  // Set the frame ID and timestamp.  See the TF tutorials for information on these.
+  cube.header.frame_id = "odom";
+  cube.header.stamp = ros::Time::now();
 
-  ros::Subscriber pose_sub = n.subscribe("odom", 10, get_current_pose);
+  // Set the namespace and id for this marker.  This serves to create a unique ID
+  // Any marker sent with the same namespace and id will overwrite the old one
+  cube.ns = "add_markers";
+  cube.id = 0;
 
-  uint32_t shape = visualization_msgs::Marker::CUBE;
+  // Set the marker type.  Initially this is CUBE, and cycles between that and SPHERE, ARROW, and CYLINDER
+  cube.type = visualization_msgs::Marker::CUBE;
 
-  enum State {
-    PICKUP,  // going to pick up zon
-    CARRY,   // carry to drop zone
-    DROP,    // already drop
-  } state = PICKUP;
+  // Set the marker action.  Options are ADD, DELETE, and new in ROS Indigo: 3 (DELETEALL)
+  cube.action = visualization_msgs::Marker::ADD;
 
-  ROS_INFO("Going to pick up zone ... ");
+  // Set the pose of the marker.  This is a full 6DOF pose relative to the frame/time specified in the header
+  cube.pose.position.x = pickx;
+  cube.pose.position.y = picky;
+  cube.pose.orientation.z = 0;
+
+
+  // Set the size of the marker 
+  cube.scale.x = 0.2;
+  cube.scale.y = 0.2;
+  cube.scale.z = 0.2;
+
+  // Set the color
+  cube.color.r = 0.0f;
+  cube.color.g = 0.0f;
+  cube.color.b = 1.0f;
+  cube.color.a = 1.0;
+
+  cube.lifetime = ros::Duration();
+
   while (ros::ok())
   {
-    visualization_msgs::Marker marker;
-    // Set the frame ID and timestamp.  See the TF tutorials for information on these.
-    marker.header.frame_id = "odom";
-    marker.header.stamp = ros::Time::now();
+    float xdistance, ydistance,orient;
 
-    marker.ns = "basic_shapes";
-    marker.id = 0;
-
-    marker.type = shape;
-
-    marker.action = visualization_msgs::Marker::ADD;
-
-    marker.pose.position.x = 0;
-    marker.pose.position.y = 0;
-    marker.pose.position.z = 0;
-    marker.pose.orientation.x = 0.0;
-    marker.pose.orientation.y = 0.0;
-    marker.pose.orientation.z = 0.0;
-    marker.pose.orientation.w = 2.0;
-
-    marker.scale.x = 0.5;
-    marker.scale.y = 0.5;
-    marker.scale.z = 0.5;
-
-    marker.color.r = 0.0f;
-    marker.color.g = 1.0f;
-    marker.color.b = 0.0f;
-    marker.color.a = 1.0;
-
-    marker.lifetime = ros::Duration();
-
-    /*while (marker_pub.getNumSubscribers() < 1)
-    {
-      if (!ros::ok())
+    float tol = 0.5;
+      if (!picked)
       {
-        return 0;
+        cube_pub.publish(cube);
+        xdistance = fabs(cube.pose.position.x - robotx);
+        ydistance = fabs(cube.pose.position.y - roboty);
+        if( (xdistance < tol) && (ydistance < tol))
+        {
+          cube.action = visualization_msgs::Marker::DELETE;
+          cube_pub.publish(cube);
+          picked = true;
+        }
+
       }
-      ROS_WARN_ONCE("Please create a subscriber to the marker");
-      sleep(1);
-    }*/
+      else
+      {
+        xdistance = fabs(cube.pose.position.x - robotx);
+        ydistance = fabs(cube.pose.position.y - roboty);
+
+        if( (xdistance < tol) && (ydistance < tol) )
+        {
+          cube.action = visualization_msgs::Marker::ADD;
+          cube.pose.position.x = dropx;
+          cube.pose.position.y = dropy;
+          cube.pose.orientation.z = 0;
+          cube_pub.publish(cube);
+        }
+      }
 
     ros::spinOnce();
 
-    if (state == PICKUP) {
-      marker.action = visualization_msgs::Marker::ADD;
-      marker.pose.position.x = pickUpPos[0];
-      marker.pose.position.y = pickUpPos[1];
-      marker_pub.publish(marker);
-      if (reach_pick_up()) {
-        sleep(5);
-        ROS_INFO("Carrying to drop zone ... ");
-        state = CARRY;
-      }
+
+
+
+    rate.sleep();
+
     }
-    else if (state == CARRY) {
-      marker.action = visualization_msgs::Marker::DELETE;
-      marker.pose.position.x = dropOffPos[0];
-      marker.pose.position.y = dropOffPos[1];
-      marker_pub.publish(marker);
-      if (reach_drop_zone()) {
-        ROS_INFO("Reached drop zone. ");
-        state = DROP;
-      }
-    }
-    else /* state == DROP */ {
-      marker.action = visualization_msgs::Marker::ADD;
-      marker.pose.position.x = dropOffPos[0];
-      marker.pose.position.y = dropOffPos[1];
-      marker_pub.publish(marker);
-    }
-ros::spinOnce();
-  }
+    return 0;
 }

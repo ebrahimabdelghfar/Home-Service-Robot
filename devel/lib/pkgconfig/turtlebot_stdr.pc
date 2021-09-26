@@ -1,4 +1,4 @@
-prefix=/home/ebrahim/Home_services_robot/devel
+prefix=/home/ebrahim/Home-service-Robot/devel
 
 Name: turtlebot_stdr
 Description: Description of turtlebot_stdr
